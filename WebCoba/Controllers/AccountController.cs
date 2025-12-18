@@ -76,6 +76,7 @@ namespace WebCoba.Controllers
         [ValidateAntiForgeryToken]
         public ActionResult Logout() {
             var authManager = HttpContext.GetOwinContext().Authentication;
+
             authManager.SignOut(DefaultAuthenticationTypes.ApplicationCookie);
             return RedirectToAction("Login");
         }
