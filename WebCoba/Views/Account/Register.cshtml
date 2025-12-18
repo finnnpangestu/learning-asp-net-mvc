@@ -1,0 +1,60 @@
+﻿@section styles {
+    <link href="~/Content/Features/login.css" rel="stylesheet" />
+}
+
+@{
+    ViewBag.Title = "Daftar Akun";
+}
+
+<div class="auth-container">
+    <div class="auth-card shadow-sm">
+        <div class="auth-header text-center">
+            <div class="auth-icon-circle" style="background-color: rgba(40, 167, 69, 0.1); color: #28a745;">
+                <i class="fas fa-user-plus"></i>
+            </div>
+            <h2>Daftar Akun</h2>
+            <p>Lengkapi data untuk mulai mengelola inventaris</p>
+        </div>
+
+        <div class="auth-body">
+            @using(Html.BeginForm()) {
+                @Html.AntiForgeryToken()
+
+                if(!ViewData.ModelState.IsValid) {
+                    <div class="alert alert-danger custom-alert">
+                        @Html.ValidationSummary(true, "")
+                    </div>
+                }
+
+                <div class="form-group mb-4">
+                    <label class="form-label">Username</label>
+                    <div class="input-group-custom">
+                        <i class="fas fa-user input-icon"></i>
+                        <input type="text" name="username" class="form-control" placeholder="Pilih username unik" required />
+                    </div>
+                </div>
+
+                <div class="form-group mb-4">
+                    <label class="form-label">Password</label>
+                    <div class="input-group-custom">
+                        <i class="fas fa-key input-icon"></i>
+                        <input type="password" name="password" class="form-control" placeholder="Buat password minimal 6 karakter" required />
+                    </div>
+                    <small class="text-muted mt-2 d-block" style="font-size: 0.75rem;">
+                        <i class="fas fa-info-circle me-1"></i> Gunakan kombinasi angka & simbol.
+                    </small>
+                </div>
+
+                @* Menggunakan GButton dengan variant success *@
+                @Html.GButton("Daftar Sekarang",
+                    variant: "success",
+                    icon: "fas fa-check-circle",
+                    htmlAttributes: new { type = "submit", @class = "w-100 mb-3" })
+
+                <div class="auth-footer text-center mt-4">
+                    <p>Sudah punya akun? <a href="@Url.Action("Login", "Account")" class="auth-link">Login di sini</a></p>
+                </div>
+            }
+        </div>
+    </div>
+</div>

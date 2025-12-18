@@ -1,0 +1,88 @@
+﻿.g-btn {
+    font-family: var(--main-font);
+    font-weight: 500;
+    display: inline-flex;
+    align-items: center;
+    justify-content: center;
+    border-radius: 6px;
+    cursor: pointer;
+    border: 1px solid transparent;
+    transition: all 0.25s ease-in-out;
+    gap: 8px;
+    outline: none;
+}
+
+.g-btn-primary {
+    background-color: #0451bf;
+    color: white;
+}
+
+    .g-btn-primary:hover {
+        background-color: #8bb9f9;
+    }
+
+.g-btn-danger {
+    background-color: #d11f31;
+    color: white;
+}
+
+    .g-btn-danger:hover {
+        background-color: #f9e2e4;
+    }
+
+.g-btn-warning {
+    background-color: #d1b01f;
+    color: white;
+}
+
+    .g-btn-warning:hover {
+        background-color: #f9e2e4;
+    }
+
+.g-btn-info {
+    background-color: #1f4cd1;
+    color: white;
+}
+
+    .g-btn-info:hover {
+        background-color: #e2e7f9;
+    }
+
+.g-btn-secondary {
+    background-color: #7efc62;
+    color: black;
+}
+
+    .g-btn-secondary:hover {
+        background-color: #ebfee7;
+    }
+
+.g-btn-success {
+    background-color: #1fd13a;
+    color: white;
+}
+
+    .g-btn-success:hover {
+        background-color: #e2f9e5;
+    }
+
+.g-btn:active {
+    transform: translateY(0);
+    box-shadow: none;
+    opacity: 0.8;
+}
+
+.g-btn-sm {
+    padding: 4px 12px;
+    font-size: 12px;
+}
+
+.g-btn-md {
+    padding: 10px 20px;
+    font-size: 14px;
+}
+
+.g-btn-lg {
+    padding: 14px 28px;
+    font-size: 16px;
+}

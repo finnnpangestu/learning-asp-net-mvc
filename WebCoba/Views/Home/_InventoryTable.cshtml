@@ -1,0 +1,78 @@
+﻿@model IEnumerable<WebCoba.Models.Product>
+
+<div class="table-responsive">
+    <table class="table" id="productTable">
+        <thead>
+            <tr>
+                <th style="width: 40%">
+                    <a href="javascript:void(0)" class="text-decoration-none" onclick="updateTable('@ViewBag.CurrentSearch', '@ViewBag.NameSort', @ViewBag.currentPage)">
+                        Nama Barang <i class="fas fa-sort ms-1 small"></i>
+                    </a>
+                </th>
+                <th>
+                    <a href="javascript:void(0)" class="text-decoration-none" onclick="updateTable('@ViewBag.CurrentSearch', '@ViewBag.PriceSort', @ViewBag.currentPage)">
+                        Harga <i class="fas fa-sort ms-1 small"></i>
+                    </a>
+                </th>
+                <th>Status</th>
+                <th class="text-center">Aksi</th>
+            </tr>
+        </thead>
+
+        <tbody>
+            @if(Model != null && Model.Any()) {
+                foreach(var item in Model) {
+                    <tr>
+                        <td class="fw-semibold text-dark">@item.Name</td>
+                        <td>@item.Price.ToString("C")</td>
+                        <td>
+                            @if(item.Stock > 0) {
+                                <span class="badge rounded-pill bg-light text-success border border-success border-opacity-25 px-3">
+                                    <i class="fas fa-check-circle me-1"></i> Tersedia (@item.Stock)
+                                </span>
+                            } else {
+                                <span class="badge rounded-pill bg-light text-danger border border-danger border-opacity-25 px-3">
+                                    <i class="fas fa-exclamation-triangle me-1"></i> Habis
+                                </span>
+                            }
+                        </td>
+                        <td>
+                            <div class="d-flex gap-2 justify-content-center">
+                                <a href="@Url.Action("Edit", new { id = item.Id })" title="Edit Data">
+                                    @Html.GButton("", variant: "warning", size: "sm", icon: "fas fa-edit")
+                                </a>
+                                <a href="@Url.Action("Details", new { id = item.Id })" title="Detail Data">
+                                    @Html.GButton("", variant: "info", size: "sm", icon: "fas fa-eye")
+                                </a>
+                                @Html.GButton("", variant: "danger", size: "sm", icon: "fas fa-trash", htmlAttributes: new { onclick = $"deleteProduct({item.Id})", title = "Hapus Data" })
+                            </div>
+                        </td>
+                    </tr>
+                }
+            } else {
+                <tr>
+                    <td colspan="4" class="text-center py-5">
+                        <div class="empty-state py-4">
+                            <i class="fas fa-folder-open fa-3x text-light mb-3"></i>
+                            <h5 class="text-muted fw-normal">Data inventaris tidak ditemukan</h5>
+                            <p class="small text-secondary">Coba gunakan kata kunci lain</p>
+                        </div>
+                    </td>
+                </tr>
+            }
+        </tbody>
+    </table>
+</div>
+
+@if(ViewBag.TotalPages > 1) {
+    <nav aria-label="Page navigation" class="d-flex justify-content-center">
+        <ul class="pagination pagination-sm">
+            @for(int i = 1; i <= ViewBag.TotalPages; i++) {
+                <li class="page-item @(i == ViewBag.currentPage ? "active" : "")">
+                    <a class="page-link" href="javascript:void(0)"
+                       onclick="updateTable('@ViewBag.CurrentSearch', '@ViewBag.CurrentSort', @i)">@i</a>
+                </li>
+            }
+        </ul>
+    </nav>
+}

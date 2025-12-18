@@ -1,0 +1,93 @@
+﻿@model IEnumerable<WebCoba.Models.Product>
+
+@section styles {
+    <link href="~/Content/Features/home.css" rel="stylesheet" />
+}
+
+@{
+    ViewBag.Title = "Index";
+}
+
+<div class="inv-header-section mt-4">
+    <h2>Daftar Inventory</h2>
+</div>
+
+<div class="inv-layout-container">
+    <div class="inv-action-bar mb-3">
+        <div class="row align-items-center">
+            <div class="col-md-6">
+                <a href="@Url.Action("Create")" style="text-decoration:none">
+                    @Html.GButton("Tambah Barang Baru", variant: "primary", icon: "fas fa-plus-circle")
+                </a>
+            </div>
+            <div class="col-md-6">
+                @using(Html.BeginForm("Index", "Inventory", FormMethod.Get, new { id = "searchForm", @class = "m-0" })) {
+                    <div class="search-wrapper">
+                        <i class="fas fa-search search-icon"></i>
+                        <input type="text" name="search" class="form-control" placeholder="Cari nama barang..." value="@ViewBag.CurrentSearch" />
+                        <div class="ms-2">
+                            @Html.GButton("Cari", variant: "dark", htmlAttributes: new { type = "submit" })
+                        </div>
+                    </div>
+                }
+            </div>
+        </div>
+    </div>
+
+    <div class="inv-table-card shadow-sm" id="tableContainer">
+        @Html.Partial("_InventoryTable", Model ?? new List<WebCoba.Models.Product>())
+    </div>
+
+</div>
+
+@section scripts {
+    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script>
+        function deleteProduct(id) {
+            if (confirm("Yakin mau hapus?")) {
+                var currentSearch = $("input[name='search']").val();
+
+                $.post("/Home/Delete", { id: id }, function (data) {
+                    $("#tableContainer").html(data);
+                    alert("Data berhasil dihapus!");
+                }).fail(function () {
+                    alert("Terjadi kesalahan saat menghapus data.");
+                });;
+            }
+        }
+
+        function updateTable(search, sort, page) {
+            var keyword = search !== undefined ? search : $("input[name='search']").val();
+
+            $.get("/Home/Index", {
+                search: keyword,
+                sortOrder: sort,
+                page: page
+            }, function (data) {
+                $("#tableContainer").html(data);
+            });
+        }
+
+        $(document).ready(function () {
+            $("#searchForm").submit(function (e) {
+                e.preventDefault();
+
+                var keyword = $("input[name='search']").val();
+
+                updateTable(keyword, '', 1);
+            });
+        });
+
+        $(document).ready(function () {
+            var typingTimer;
+
+            $("input[name='search']").on("keyup", function () {
+                clearTimeout(typingTimer);
+                var keyword = $(this).val();
+                typingTimer = setTimeout(function () {
+                    updateTable(keyword, '', 1);
+                }, 500);
+            });
+        });
+    </script>
+}

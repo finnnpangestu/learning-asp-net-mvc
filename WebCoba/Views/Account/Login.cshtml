@@ -1,0 +1,47 @@
+﻿@section styles {
+    <link href="~/Content/Features/login.css" rel="stylesheet" />
+}
+
+@{
+    ViewBag.Title = "Login";
+}
+
+<div class="auth-container">
+    <div class="auth-card shadow-sm">
+        <div class="auth-header text-center">
+            <div class="auth-icon-circle">
+                <i class="fas fa-lock"></i>
+            </div>
+            <h2>Selamat Datang</h2>
+            <p>Silakan masuk ke akun Inventaris Anda</p>
+        </div>
+
+        <div class="auth-body">
+            @using(Html.BeginForm("Login", "Account", new { ReturnUrl = ViewBag.ReturnUrl }, FormMethod.Post)) {
+                @Html.AntiForgeryToken()
+
+                <div class="form-group mb-4">
+                    <label class="form-label">Username</label>
+                    <div class="input-group-custom">
+                        <i class="fas fa-user input-icon"></i>
+                        <input type="text" name="username" class="form-control" placeholder="Masukkan username" required />
+                    </div>
+                </div>
+
+                <div class="form-group mb-4">
+                    <label class="form-label">Password</label>
+                    <div class="input-group-custom">
+                        <i class="fas fa-key input-icon"></i>
+                        <input type="password" name="password" class="form-control" placeholder="Masukkan password" required />
+                    </div>
+                </div>
+
+                @Html.GButton("Masuk", variant: "primary", icon: "fas fa-sign-in-alt", htmlAttributes: new { type = "submit" })
+
+                <div class="auth-footer text-center mt-4">
+                    <p>Belum punya akun? <a href="@Url.Action("Register", "Account")" class="auth-link">Daftar Akun Baru</a></p>
+                </div>
+            }
+        </div>
+    </div>
+</div>
