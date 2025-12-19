@@ -7,7 +7,6 @@ using WebCoba.Helpers;
 using WebCoba.Models;
 
 namespace WebCoba.Controllers {
-    [Authorize]
     public class HomeController : Controller {
         private InventoryContext db;
 

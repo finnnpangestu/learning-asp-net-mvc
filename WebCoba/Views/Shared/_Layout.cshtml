@@ -29,15 +29,23 @@
             <ul class="navbar-nav ms-auto">
                 @if(Request.IsAuthenticated) {
                     <li class="nav-item">
-                        <span class="nav-link me-3">
-                            <i class="fas fa-user"></i> @User.Identity.Name
+                        <span class="nav-link me-3 text-white">
+                            <i class="fas fa-user-circle"></i> @User.Identity.Name
                         </span>
                     </li>
+
+                    if(User.IsInRole("Admin")) {
+                        <li class="nav-item">
+                            <a class="nav-link text-warning fw-bold me-3" href="@Url.Action("Index", "Admin")">
+                                <i class="fas fa-shield-alt"></i> Panel Admin
+                            </a>
+                        </li>
+                    }
+
                     <li class="nav-item">
                         <a href="javascript:void(0);"
                            class="nav-link text-danger fw-bold"
-                           onclick="document.getElementById('logoutForm').submit();"
-                           style="cursor:pointer;">
+                           onclick="document.getElementById('logoutForm').submit();">
                             <i class="fas fa-sign-out-alt"></i> Logout
                         </a>
 
@@ -46,11 +54,6 @@
                         }
                     </li>
                 } else {
-                    <li class="nav-item">
-                        <a href="@Url.Action("Login", "Account")" class="nav-link">
-                            <i class="fas fa-sign-in-alt"></i> Login
-                        </a>
-                    </li>
                 }
             </ul>
         </div>

@@ -1,0 +1,49 @@
+﻿@model IEnumerable<WebCoba.Models.UserView>
+
+@section styles {
+    <link href="~/Content/Features/home.css" rel="stylesheet" />
+}
+
+@{
+    ViewBag.Title = "Manajemen User";
+}
+
+<div class="inv-header-section mt-4">
+    <h2>Manajemen Pengguna</h2>
+</div>
+
+<div class="inv-table-card shadow-sm">
+    <div class="table-responsive">
+        <table class="table" id="productTable">
+            <thead>
+                <tr>
+                    <th style="width: 30%">Username</th>
+                    <th style="width: 40%">User ID (System)</th>
+                    <th>Role</th>
+                    <th class="text-center">Aksi</th>
+                </tr>
+            </thead>
+            <tbody>
+                @foreach(var user in Model) {
+                    <tr>
+                        <td class="fw-bold text-dark">
+                            <i class="fas fa-user-circle me-2 text-secondary"></i> @user.Username
+                        </td>
+                        <td><code class="small text-muted">@user.UserId</code></td>
+                        <td>
+                            <span class="badge rounded-pill bg-light @(user.RoleName == "Admin" ? "text-danger border-danger" : "text-primary border-primary") border border-opacity-25 px-3">
+                                <i class="fas @(user.RoleName == "Admin" ? "fa-user-shield" : "fa-user") me-1"></i>
+                                @user.RoleName
+                            </span>
+                        </td>
+                        <td class="text-center">
+                            <a href="@Url.Action("ViewUserInventory", "Admin", new { targetUsername = user.Username })">
+                                @Html.GButton("", variant: "info", size: "sm", icon: "fas fa-database")
+                            </a>
+                        </td>
+                    </tr>
+                }
+            </tbody>
+        </table>
+    </div>
+</div>

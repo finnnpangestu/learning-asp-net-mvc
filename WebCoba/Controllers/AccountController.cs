@@ -13,14 +13,19 @@ namespace WebCoba.Controllers
     public class AccountController : Controller
     {
         private UserManager<ApplicationUser> _userManager;
+        private RoleManager<IdentityRole> _roleManager;
 
         public AccountController() {
             var db = new InventoryContext("DefaultConnection");
 
             var userStore = new UserStore<ApplicationUser>(db);
             _userManager = new UserManager<ApplicationUser>(userStore);
+
+            var roleStore = new RoleStore<IdentityRole>(db);
+            _roleManager = new RoleManager<IdentityRole>(roleStore);
         }
 
+        [AllowAnonymous]
         public ActionResult Register() {
             return View();
         }
@@ -33,7 +38,14 @@ namespace WebCoba.Controllers
             var result = _userManager.Create(user, password);
 
             if(result.Succeeded) {
+                if(!_roleManager.RoleExists("User")) {
+                    _roleManager.Create(new IdentityRole("User"));
+                }
+
+                _userManager.AddToRole(user.Id, "User");
+
                 DoSignIn(user);
+
                 return RedirectToAction("Index", "Home");
             }
 
@@ -56,7 +68,16 @@ namespace WebCoba.Controllers
 
             if(user != null) {
                 DoSignIn(user);
-                if(!string.IsNullOrEmpty(returnUrl)) return Redirect(returnUrl);
+
+                if(!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)) {
+                    return Redirect(returnUrl);
+                }
+
+                var roles = _userManager.GetRoles(user.Id);
+                if (roles.Contains("Admin")) {
+                    return RedirectToAction("Index", "Admin");
+                }
+
                 return RedirectToAction("Index", "Home");
             }
 
