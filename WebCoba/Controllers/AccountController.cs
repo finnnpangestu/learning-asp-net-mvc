@@ -67,6 +67,17 @@ namespace WebCoba.Controllers
             var user = _userManager.Find(username, password);
 
             if(user != null) {
+                if (_userManager.IsLockedOut(user.Id)) {
+                    var lockoutDate = _userManager.GetLockoutEndDate(user.Id);
+
+                    string pesan = lockoutDate == DateTimeOffset.MaxValue
+                        ? "Akun Anda telah di-suspend PERMANEN oleh Admin."
+                        : $"Akun Anda sedang di-suspend hingga {lockoutDate.LocalDateTime:dd MMM yyyy HH:mm}.";
+
+                    ModelState.AddModelError("", pesan);
+                    return View();
+                }
+
                 DoSignIn(user);
 
                 if(!string.IsNullOrEmpty(returnUrl) && Url.IsLocalUrl(returnUrl)) {
@@ -91,6 +102,32 @@ namespace WebCoba.Controllers
             var identity = _userManager.CreateIdentity(user, DefaultAuthenticationTypes.ApplicationCookie);
 
             authManager.SignIn(new AuthenticationProperties { IsPersistent = false }, identity);
+        }
+
+        public ActionResult ChangePassword() {
+            return View();
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult ChangePassword(ChangePassword model) {
+            if (!ModelState.IsValid) {
+                return View(model);
+            }
+
+            var result = _userManager.ChangePassword(User.Identity.GetUserId(), model.OldPassword, model.NewPassword);
+
+            if (result.Succeeded) {
+                TempData["SuccessMessage"] = "Password Anda berhasil diperbarui";
+                
+                return RedirectToAction("Index", "Home");
+            }
+
+            foreach (var error in result.Errors) {
+                ModelState.AddModelError("", error);
+            }
+
+            return View(model);
         }
 
         [HttpPost]

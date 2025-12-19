@@ -5,7 +5,7 @@
 }
 
 @{
-    ViewBag.Title = "Index";
+    ViewBag.Title = "Inventory";
 }
 
 <div class="inv-header-section mt-4">
@@ -16,78 +16,119 @@
     <div class="inv-action-bar mb-3">
         <div class="row align-items-center">
             <div class="col-md-6">
-                <a href="@Url.Action("Create")" style="text-decoration:none">
-                    @Html.GButton("Tambah Barang Baru", variant: "primary", icon: "fas fa-plus-circle")
-                </a>
+                <button onclick="openModal('@Url.Action("Create", "Home")')" class="g-btn g-btn-primary">
+                    <i class="fa fa-plus"></i> Tambah Barang Baru
+                </button>
             </div>
             <div class="col-md-6">
-                @using(Html.BeginForm("Index", "Inventory", FormMethod.Get, new { id = "searchForm", @class = "m-0" })) {
-                    <div class="search-wrapper">
-                        <i class="fas fa-search search-icon"></i>
-                        <input type="text" name="search" class="form-control" placeholder="Cari nama barang..." value="@ViewBag.CurrentSearch" />
-                        <div class="ms-2">
-                            @Html.GButton("Cari", variant: "dark", htmlAttributes: new { type = "submit" })
-                        </div>
-                    </div>
-                }
+                <div class="search-wrapper">
+                    <i class="fas fa-search search-icon"></i>
+                    <input type="text" id="searchInput" class="form-control" placeholder="Cari nama barang..." value="@ViewBag.CurrentSearch" />
+                </div>
             </div>
         </div>
     </div>
 
-    <div class="inv-table-card shadow-sm" id="tableContainer">
-        @Html.Partial("_InventoryTable", Model ?? new List<WebCoba.Models.Product>())
+    <div id="tableContainer" class="inv-table-card shadow-sm">
+        @Html.Partial("_InventoryTable", Model)
     </div>
+</div>
 
+<div class="modal fade" id="ajaxModal" tabindex="-1" aria-hidden="true">
+    <div class="modal-dialog modal-dialog-centered">
+        <div class="modal-content border-0 shadow-lg rounded-4" id="modalContent">
+            <div class="text-center p-5">
+                <div class="spinner-border text-primary" role="status"></div>
+                <p class="mt-2 text-muted small">Memuat Form...</p>
+            </div>
+        </div>
+    </div>
 </div>
 
 @section scripts {
-    <script src="https://code.jquery.com/jquery-3.6.0.min.js"></script>
+    <script src="https://cdn.jsdelivr.net/npm/sweetalert2@11"></script>
     <script>
-        function deleteProduct(id) {
-            if (confirm("Yakin mau hapus?")) {
-                var currentSearch = $("input[name='search']").val();
+        function openModal(url) {
+            $("#modalContent").html('<div class="text-center p-5"><div class="spinner-border text-primary"></div></div>');
+            $("#ajaxModal").modal("show");
+            $.get(url, function (data) {
+                $("#modalContent").html(data);
+            });
+        }
 
-                $.post("/Home/Delete", { id: id }, function (data) {
-                    $("#tableContainer").html(data);
-                    alert("Data berhasil dihapus!");
-                }).fail(function () {
-                    alert("Terjadi kesalahan saat menghapus data.");
-                });;
-            }
+        $(document).on("submit", "#ajaxForm", function (e) {
+            e.preventDefault();
+
+            var form = $(this);
+            var submitBtn = form.find("button[type='submit']");
+            var originalBtnText = submitBtn.html();
+
+            submitBtn.html('<i class="fas fa-spinner fa-spin"></i> Menyimpan...').prop('disabled', true);
+
+            $.ajax({
+                url: form.attr("action"),
+                type: "POST",
+                data: form.serialize(),
+                success: function (response) {
+                    if (response.success) {
+                        $("#ajaxModal").modal("hide");
+                        refreshTable();
+                        Swal.fire({
+                            icon: 'success',
+                            title: 'Berhasil!',
+                            text: response.message,
+                            timer: 2000,
+                            showConfirmButton: false
+                        });
+                    } else {
+                        $("#modalContent").html(response);
+                    }
+                },
+                error: function () {
+                    alert("Terjadi kesalahan server.");
+                    submitBtn.html(originalBtnText).prop('disabled', false);
+                }
+            });
+        });
+
+        function deleteProduct(id) {
+            Swal.fire({
+                title: 'Yakin hapus barang ini?',
+                text: "Data yang dihapus tidak bisa dikembalikan!",
+                icon: 'warning',
+                showCancelButton: true,
+                confirmButtonColor: '#d33',
+                cancelButtonColor: '#3085d6',
+                confirmButtonText: 'Ya, Hapus!',
+                cancelButtonText: 'Batal'
+            }).then((result) => {
+                if (result.isConfirmed) {
+                    $.post("@Url.Action("Delete", "Home")", { id: id }, function () {
+                        refreshTable();
+                        Swal.fire('Terhapus!', 'Data inventaris telah dihapus.', 'success');
+                    });
+                }
+            });
         }
 
         function updateTable(search, sort, page) {
-            var keyword = search !== undefined ? search : $("input[name='search']").val();
-
-            $.get("/Home/Index", {
-                search: keyword,
-                sortOrder: sort,
-                page: page
-            }, function (data) {
+            var keyword = search !== undefined ? search : $("#searchInput").val();
+            $.get("@Url.Action("GetTable", "Home")", { search: keyword, sortOrder: sort, page: page }, function (data) {
                 $("#tableContainer").html(data);
             });
         }
 
-        $(document).ready(function () {
-            $("#searchForm").submit(function (e) {
-                e.preventDefault();
+        function refreshTable() {
+            updateTable($("#searchInput").val(), '@ViewBag.CurrentSort', @ViewBag.currentPage);
+        }
 
-                var keyword = $("input[name='search']").val();
-
-                updateTable(keyword, '', 1);
-            });
-        });
-
-        $(document).ready(function () {
-            var typingTimer;
-
-            $("input[name='search']").on("keyup", function () {
-                clearTimeout(typingTimer);
-                var keyword = $(this).val();
-                typingTimer = setTimeout(function () {
-                    updateTable(keyword, '', 1);
-                }, 500);
-            });
+        var typingTimer;
+        $("#searchInput").on('keyup', function () {
+            clearTimeout(typingTimer);
+            var val = $(this).val();
+            typingTimer = setTimeout(function () {
+                updateTable(val, '@ViewBag.CurrentSort', 1);
+            }, 500);
         });
     </script>
 }

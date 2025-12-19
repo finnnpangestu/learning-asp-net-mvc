@@ -15,21 +15,40 @@ namespace WebCoba.Controllers
     {
         private InventoryContext dbMaster = new InventoryContext("DefaultConnection");
 
-        public ActionResult Index(string search) {
+        public ActionResult Index(string search, string sortOrder, int page = 1) {
+            var userStore = new UserStore<ApplicationUser>(dbMaster);
+            var userManager = new UserManager<ApplicationUser>(userStore);
+
             var query = dbMaster.Users.AsQueryable();
 
-            if (!string.IsNullOrEmpty(search)) {
+            if(!string.IsNullOrEmpty(search)) {
                 query = query.Where(u => u.UserName.Contains(search));
             }
 
-            var userList = query.ToList().Select(u => new UserView {
+            ViewBag.NameSort = String.IsNullOrEmpty(sortOrder) ? "name_desc" : "";
+            ViewBag.CurrentSort = sortOrder;
+
+            switch(sortOrder) {
+                case "name_desc": query = query.OrderByDescending(u => u.UserName); break;
+                default: query = query.OrderBy(u => u.UserName); break;
+            }
+
+            int pageSize = 5;
+            int totalItems = query.Count();
+            var pagedData = query.Skip((page - 1) * pageSize).Take(pageSize).ToList();
+
+            var userList = pagedData.Select(u => new UserView {
                 UserId = u.Id,
                 Username = u.UserName,
-                RoleName = GetUserRoleName(u.Id)
+                RoleName = GetUserRoleName(u.Id),
+                IsSuspended = userManager.IsLockedOut(u.Id)
             }).ToList();
 
+            ViewBag.CurrentPage = page;
+            ViewBag.TotalPages = (int)Math.Ceiling((double)totalItems / pageSize);
             ViewBag.CurrentSearch = search;
-            return View(userList.ToList());
+
+            return View(userList);
         }
 
         public ActionResult ViewUserInventory(string targetUsername) {
@@ -53,6 +72,49 @@ namespace WebCoba.Controllers
                 TempData["ErrorMessage"] = "Database untuk user " + targetUsername + " belum tersedia." + e.ToString();
                 return RedirectToAction("Index");
             }
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult SuspendUser(string userId, int? days) {
+            if (string.IsNullOrEmpty(userId)) {
+                return HttpNotFound();
+            }
+
+            var db = new InventoryContext("DefaultConnection");
+            var userStore = new UserStore<ApplicationUser>(db);
+            var userManager = new UserManager<ApplicationUser>(userStore);
+
+            var user = userManager.FindById(userId);
+
+            userManager.SetLockoutEnabled(userId, true);
+
+            if (days == -1) {
+                userManager.SetLockoutEndDate(userId, DateTimeOffset.MaxValue);
+                TempData["SuccessMessage"] = "User berhasil di-suspend permanen.";
+            } else {
+                var endDate = DateTimeOffset.UtcNow.AddDays((double)days.Value);
+
+                userManager.SetLockoutEndDate(userId, endDate);
+                TempData["SuccessMessage"] = $"User berhasil di-suspend selama {days} hari.";
+            }
+
+            return RedirectToAction("Index");
+        }
+
+        [HttpPost]
+        [ValidateAntiForgeryToken]
+        public ActionResult UnsuspendUser(string userId) {
+            if(string.IsNullOrEmpty(userId)) return HttpNotFound();
+
+            var db = new InventoryContext("DefaultConnection");
+            var userStore = new UserStore<ApplicationUser>(db);
+            var userManager = new UserManager<ApplicationUser>(userStore);
+
+            userManager.SetLockoutEndDate(userId, DateTimeOffset.UtcNow.AddMinutes(-1));
+
+            TempData["Success"] = "Akses pengguna telah dipulihkan.";
+            return RedirectToAction("Index");
         }
 
         private string GetUserRoleName(string userId) {
